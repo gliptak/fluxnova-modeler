@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Outer circle (AI brain concept) -->
+  <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="2"/>
+  
+  <!-- Neural network nodes -->
+  <circle cx="24" cy="12" r="2.5" fill="currentColor"/>
+  <circle cx="32" cy="20" r="2.5" fill="currentColor"/>
+  <circle cx="16" cy="20" r="2.5" fill="currentColor"/>
+  <circle cx="28" cy="30" r="2" fill="currentColor"/>
+  <circle cx="20" cy="32" r="2" fill="currentColor"/>
+  <circle cx="24" cy="38" r="2.5" fill="currentColor"/>
+  
+  <!-- Neural connections -->
+  <line x1="24" y1="14.5" x2="32" y2="18" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  <line x1="24" y1="14.5" x2="16" y2="18" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  <line x1="32" y1="22.5" x2="28" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  <line x1="16" y1="22.5" x2="20" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  <line x1="28" y1="32" x2="24" y2="36" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  <line x1="20" y1="34" x2="24" y2="36" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+  
+  <!-- Center accent (LLM symbol) -->
+  <path d="M 20 24 L 28 24 M 24 20 L 24 28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>

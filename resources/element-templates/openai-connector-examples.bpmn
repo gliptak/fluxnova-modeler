@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                   id="openai-examples"
+                   targetNamespace="http://fluxnova.org/schema/bpmn/openai-examples"
+                   exporter="Fluxnova Modeler">
+
+  <!-- ====== EXAMPLE 1: Simple Q&A ====== -->
+  <bpmn:process id="SimpleQAProcess" name="OpenAI: Simple Q&amp;A">
+    <bpmn:startEvent id="StartEvent1" name="Start">
+      <bpmn:outgoing>SequenceFlow1</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:serviceTask id="AskOpenAI" name="Ask OpenAI">
+      <bpmn:incoming>SequenceFlow1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow2</bpmn:outgoing>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:connectorId>openai-connector</camunda:connectorId>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="apiKey">${secrets.openaiKey}</camunda:inputParameter>
+            <camunda:inputParameter name="userMessage">What are the top 3 benefits of business process automation?</camunda:inputParameter>
+            <camunda:inputParameter name="model">gpt-3.5-turbo</camunda:inputParameter>
+            <camunda:outputParameter name="aiResponse">${content}</camunda:outputParameter>
+            <camunda:outputParameter name="tokenUsage">${usage}</camunda:outputParameter>
+          </camunda:inputOutput>
+        </camunda:connector>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndEvent1" name="End">
+      <bpmn:incoming>SequenceFlow2</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="SequenceFlow1" sourceRef="StartEvent1" targetRef="AskOpenAI"/>
+    <bpmn:sequenceFlow id="SequenceFlow2" sourceRef="AskOpenAI" targetRef="EndEvent1"/>
+  </bpmn:process>
+
+  <!-- ====== EXAMPLE 2: Multi-Turn Conversation ====== -->
+  <bpmn:process id="MultiTurnConversationProcess" name="OpenAI: Multi-Turn Conversation">
+    <bpmn:startEvent id="StartEvent2" name="Start">
+      <bpmn:outgoing>SequenceFlow3</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:serviceTask id="FirstTurn" name="First Question">
+      <bpmn:incoming>SequenceFlow3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow4</bpmn:outgoing>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:connectorId>openai-connector</camunda:connectorId>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="apiKey">${secrets.openaiKey}</camunda:inputParameter>
+            <camunda:inputParameter name="systemMessage">You are a helpful business consultant.</camunda:inputParameter>
+            <camunda:inputParameter name="userMessage">${firstQuestion}</camunda:inputParameter>
+            <camunda:inputParameter name="model">gpt-4</camunda:inputParameter>
+            <camunda:outputParameter name="firstResponse">${content}</camunda:outputParameter>
+          </camunda:inputOutput>
+        </camunda:connector>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="SecondTurn" name="Follow-up Question">
+      <bpmn:incoming>SequenceFlow4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow5</bpmn:outgoing>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:connectorId>openai-connector</camunda:connectorId>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="apiKey">${secrets.openaiKey}</camunda:inputParameter>
+            <camunda:inputParameter name="systemMessage">You are a helpful business consultant.</camunda:inputParameter>
+            <camunda:inputParameter name="messages">[
+              {
+                "role": "user",
+                "content": "${firstQuestion}"
+              },
+              {
+                "role": "assistant",
+                "content": "${firstResponse}"
+              },
+              {
+                "role": "user",
+                "content": "${secondQuestion}"
+              }
+            ]</camunda:inputParameter>
+            <camunda:inputParameter name="model">gpt-4</camunda:inputParameter>
+            <camunda:outputParameter name="secondResponse">${content}</camunda:outputParameter>
+          </camunda:inputOutput>
+        </camunda:connector>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndEvent2" name="End">
+      <bpmn:incoming>SequenceFlow5</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="SequenceFlow3" sourceRef="StartEvent2" targetRef="FirstTurn"/>
+    <bpmn:sequenceFlow id="SequenceFlow4" sourceRef="FirstTurn" targetRef="SecondTurn"/>
+    <bpmn:sequenceFlow id="SequenceFlow5" sourceRef="SecondTurn" targetRef="EndEvent2"/>
+  </bpmn:process>
+
+  <!-- ====== EXAMPLE 3: Document Analysis with Error Handling ====== -->
+  <bpmn:process id="DocumentAnalysisProcess" name="OpenAI: Document Analysis with Retries">
+    <bpmn:startEvent id="StartEvent3" name="Start">
+      <bpmn:outgoing>SequenceFlow6</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:serviceTask id="AnalyzeDocument" name="Analyze Document">
+      <bpmn:incoming>SequenceFlow6</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow7</bpmn:outgoing>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:connectorId>openai-connector</camunda:connectorId>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="apiKey">${secrets.openaiKey}</camunda:inputParameter>
+            <camunda:inputParameter name="systemMessage">You are a document analysis expert. Extract key information and provide insights. Be concise.</camunda:inputParameter>
+            <camunda:inputParameter name="userMessage">Analyze this document: ${documentContent}</camunda:inputParameter>
+            <camunda:inputParameter name="model">gpt-4-turbo</camunda:inputParameter>
+            <camunda:inputParameter name="temperature">0.3</camunda:inputParameter>
+            <camunda:inputParameter name="maxTokens">1000</camunda:inputParameter>
+            <camunda:outputParameter name="analysisResult">${content}</camunda:outputParameter>
+            <camunda:outputParameter name="tokenUsage">${usage}</camunda:outputParameter>
+          </camunda:inputOutput>
+        </camunda:connector>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    
+    <bpmn:boundaryEvent id="ErrorBoundary" name="API Error" attachedToRef="AnalyzeDocument">
+      <bpmn:outgoing>ErrorFlow1</bpmn:outgoing>
+      <bpmn:errorEventDefinition/>
+    </bpmn:boundaryEvent>
+    
+    <bpmn:exclusiveGateway id="RetryGateway" name="Retry?">
+      <bpmn:incoming>ErrorFlow1</bpmn:incoming>
+      <bpmn:outgoing>RetryYes</bpmn:outgoing>
+      <bpmn:outgoing>RetryNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:intermediateCatchEvent id="RetryWait" name="Wait 5s">
+      <bpmn:incoming>RetryYes</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow8</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT5S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    
+    <bpmn:endEvent id="ErrorEndEvent" name="Failed">
+      <bpmn:incoming>RetryNo</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:endEvent id="SuccessEndEvent" name="Success">
+      <bpmn:incoming>SequenceFlow7</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="SequenceFlow6" sourceRef="StartEvent3" targetRef="AnalyzeDocument"/>
+    <bpmn:sequenceFlow id="SequenceFlow7" sourceRef="AnalyzeDocument" targetRef="SuccessEndEvent"/>
+    <bpmn:sequenceFlow id="ErrorFlow1" sourceRef="ErrorBoundary" targetRef="RetryGateway"/>
+    <bpmn:sequenceFlow id="RetryYes" sourceRef="RetryGateway" targetRef="RetryWait">
+      <bpmn:conditionExpression>${retryCount &lt; 3}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="RetryNo" sourceRef="RetryGateway" targetRef="ErrorEndEvent"/>
+    <bpmn:sequenceFlow id="SequenceFlow8" sourceRef="RetryWait" targetRef="AnalyzeDocument"/>
+  </bpmn:process>
+
+  <!-- ====== EXAMPLE 4: Parallel Processing with Multiple Instances ====== -->
+  <bpmn:process id="ParallelProcessingProcess" name="OpenAI: Batch Document Analysis">
+    <bpmn:startEvent id="StartEvent4" name="Start">
+      <bpmn:outgoing>SequenceFlow9</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:serviceTask id="ProcessBatch" name="Process Document" isForCompensation="false">
+      <bpmn:incoming>SequenceFlow9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow10</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopCardinality>${documents.size()}</bpmn:loopCardinality>
+        <bpmn:loopVariable>currentDocument</bpmn:loopVariable>
+      </bpmn:multiInstanceLoopCharacteristics>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:connectorId>openai-connector</camunda:connectorId>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="apiKey">${secrets.openaiKey}</camunda:inputParameter>
+            <camunda:inputParameter name="userMessage">Summarize: ${currentDocument}</camunda:inputParameter>
+            <camunda:inputParameter name="model">gpt-3.5-turbo</camunda:inputParameter>
+            <camunda:inputParameter name="maxTokens">200</camunda:inputParameter>
+            <camunda:outputParameter name="summary">${content}</camunda:outputParameter>
+          </camunda:inputOutput>
+        </camunda:connector>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndEvent4" name="End">
+      <bpmn:incoming>SequenceFlow10</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="SequenceFlow9" sourceRef="StartEvent4" targetRef="ProcessBatch"/>
+    <bpmn:sequenceFlow id="SequenceFlow10" sourceRef="ProcessBatch" targetRef="EndEvent4"/>
+  </bpmn:process>
+
+  <!-- ====== BPMN DI (Visual Layout) ====== -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram1">
+    <!-- Simple Q&A Process -->
+    <bpmndi:BPMNPlane id="BPMNPlane1" bpmnElement="SimpleQAProcess">
+      <bpmndi:BPMNShape id="BPMNShape1" bpmnElement="StartEvent1">
+        <dc:Bounds x="100" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape2" bpmnElement="AskOpenAI">
+        <dc:Bounds x="200" y="80" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape3" bpmnElement="EndEvent1">
+        <dc:Bounds x="380" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge1" bpmnElement="SequenceFlow1">
+        <di:waypoint x="136" y="118"/>
+        <di:waypoint x="200" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge2" bpmnElement="SequenceFlow2">
+        <di:waypoint x="300" y="120"/>
+        <di:waypoint x="380" y="118"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
