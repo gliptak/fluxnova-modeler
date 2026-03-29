@@ -1,0 +1,262 @@
+[
+  {
+    "$schema": "https://unpkg.com/@camunda/element-templates-json-schema/resources/schema.json",
+    "name": "OpenAI Chat Completions",
+    "id": "org.fluxnova.connectors.OpenAI",
+    "description": "Integrate Large Language Models (LLMs) via OpenAI-compatible API for conversational AI, content generation, and reasoning tasks.",
+    "version": 1,
+    "appliesTo": [
+      "bpmn:ServiceTask"
+    ],
+    "elementType": {
+      "value": "bpmn:ServiceTask"
+    },
+    "groups": [
+      {
+        "id": "authentication",
+        "label": "Authentication"
+      },
+      {
+        "id": "input",
+        "label": "Input"
+      },
+      {
+        "id": "model",
+        "label": "Model Configuration"
+      },
+      {
+        "id": "advanced",
+        "label": "Advanced Parameters"
+      },
+      {
+        "id": "output",
+        "label": "Output Mapping"
+      }
+    ],
+    "properties": [
+      {
+        "label": "Connector Type",
+        "type": "Hidden",
+        "value": "openai-connector",
+        "binding": {
+          "type": "property",
+          "name": "camunda:connectorId"
+        }
+      },
+      {
+        "label": "API Key",
+        "description": "OpenAI API key (starts with 'sk-'). Use process variables (e.g., ${openaiApiKey}) for security.",
+        "type": "String",
+        "group": "authentication",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "apiKey"
+        },
+        "constraints": {
+          "notEmpty": true,
+          "pattern": {
+            "value": "^(sk-[A-Za-z0-9_-]{20,}|\\$\\{.*\\})$",
+            "message": "Must be a valid API key (sk-...) or process variable (${...})"
+          }
+        }
+      },
+      {
+        "label": "API Endpoint (Optional)",
+        "description": "Override default OpenAI endpoint (for Azure OpenAI or local models)",
+        "type": "String",
+        "group": "authentication",
+        "optional": true,
+        "value": "https://api.openai.com/v1",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "apiEndpoint"
+        }
+      },
+      {
+        "label": "System Message",
+        "description": "Instructions for the AI's behavior and role (e.g., 'You are a helpful business analyst')",
+        "type": "Text",
+        "group": "input",
+        "optional": true,
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "systemMessage"
+        },
+        "value": ""
+      },
+      {
+        "label": "User Message",
+        "description": "The prompt or question for the AI. Use ${variable} to inject process variables.",
+        "type": "Text",
+        "group": "input",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "userMessage"
+        },
+        "constraints": {
+          "notEmpty": true
+        },
+        "value": ""
+      },
+      {
+        "label": "Conversation History (Optional)",
+        "description": "For multi-turn conversations, provide previous messages as JSON array. Example: ${conversationHistory}",
+        "type": "Text",
+        "group": "input",
+        "optional": true,
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "messages"
+        }
+      },
+      {
+        "label": "Model",
+        "description": "Model identifier. Examples: gpt-3.5-turbo (fast/cheap), gpt-4 (capable), gpt-4-turbo, gpt-4o (optimized). For Azure OpenAI use gpt-35-turbo or custom deployment names. For local models use ollama model names (e.g., llama2, mistral). Use process variable ${modelName} for dynamic selection.",
+        "type": "String",
+        "group": "model",
+        "value": "gpt-3.5-turbo",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "model"
+        },
+        "constraints": {
+          "notEmpty": true,
+          "pattern": {
+            "value": "^[a-zA-Z0-9_.-]+$|^\\$\\{.*\\}$",
+            "message": "Model name must be alphanumeric with hyphens/underscores/dots, or a process variable like ${modelName}"
+          }
+        }
+      },
+      {
+        "label": "Temperature",
+        "description": "Randomness (0.0 = deterministic, 2.0 = very creative). Default: 1.0",
+        "type": "String",
+        "group": "model",
+        "optional": true,
+        "value": "1.0",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "temperature"
+        },
+        "constraints": {
+          "pattern": {
+            "value": "^([0-1]\\.[0-9]|2\\.0|[0-2]|\\$\\{.*\\})$",
+            "message": "Must be between 0.0 and 2.0"
+          }
+        }
+      },
+      {
+        "label": "Max Tokens",
+        "description": "Maximum response length in tokens. Leave empty for model default.",
+        "type": "String",
+        "group": "model",
+        "optional": true,
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "maxTokens"
+        },
+        "constraints": {
+          "pattern": {
+            "value": "^([1-9][0-9]*|\\$\\{.*\\})$",
+            "message": "Must be a positive integer"
+          }
+        }
+      },
+      {
+        "label": "Top P",
+        "description": "Nucleus sampling (0.1 = only top 10% likely tokens). Default: 1.0",
+        "type": "String",
+        "group": "advanced",
+        "optional": true,
+        "value": "1.0",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "topP"
+        }
+      },
+      {
+        "label": "Presence Penalty",
+        "description": "Encourage new topics (-2.0 to 2.0). Default: 0.0",
+        "type": "String",
+        "group": "advanced",
+        "optional": true,
+        "value": "0.0",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "presencePenalty"
+        }
+      },
+      {
+        "label": "Frequency Penalty",
+        "description": "Reduce repetition (-2.0 to 2.0). Default: 0.0",
+        "type": "String",
+        "group": "advanced",
+        "optional": true,
+        "value": "0.0",
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "frequencyPenalty"
+        }
+      },
+      {
+        "label": "Stop Sequences",
+        "description": "JSON array of up to 4 sequences where API will stop generating. Example: [\"END\", \"\\n\\n\"]",
+        "type": "String",
+        "group": "advanced",
+        "optional": true,
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "stop"
+        }
+      },
+      {
+        "label": "User ID",
+        "description": "End-user identifier for tracking and abuse monitoring",
+        "type": "String",
+        "group": "advanced",
+        "optional": true,
+        "binding": {
+          "type": "camunda:inputParameter",
+          "name": "user"
+        }
+      },
+      {
+        "label": "Response Content",
+        "description": "Variable name to store the AI's response text",
+        "type": "String",
+        "group": "output",
+        "value": "aiResponse",
+        "binding": {
+          "type": "camunda:outputParameter",
+          "source": "${content}"
+        },
+        "constraints": {
+          "notEmpty": true
+        }
+      },
+      {
+        "label": "Token Usage",
+        "description": "Variable name to store token consumption details",
+        "type": "String",
+        "group": "output",
+        "optional": true,
+        "value": "tokenUsage",
+        "binding": {
+          "type": "camunda:outputParameter",
+          "source": "${usage}"
+        }
+      },
+      {
+        "label": "Full Response",
+        "description": "Variable name to store complete API response (for debugging)",
+        "type": "String",
+        "group": "output",
+        "optional": true,
+        "binding": {
+          "type": "camunda:outputParameter",
+          "source": "${response}"
+        }
+      }
+    ]
+  }
+]
